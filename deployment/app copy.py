@@ -1,25 +1,17 @@
-import os
-import gdown
-import tensorflow as tf
 import streamlit as st
-from PIL import Image
+import tensorflow as tf
 import numpy as np
+from PIL import Image
 
-# Link Google Drive model (gunakan ID dari URL Google Drive)
-file_id = "16mspKSZnXI3x2ENrW_FmOmei5Y_u0Z_8"  # Ganti dengan FILE_ID Anda
-url = f"https://drive.google.com/uc?id={file_id}"
-output = "efficientnetv2_rempahindo.keras"
-
+# Memuat model dengan caching menggunakan st.cache_resource (dari Streamlit versi terbaru)
 @st.cache_resource
 def load_model():
-    if not os.path.exists(output):  # Cek apakah file sudah ada sebelum mengunduh
-        gdown.download(url, output, quiet=False)
-    model = tf.keras.models.load_model(output)
+    model = tf.keras.models.load_model("D:/Skripsi/scv2/models/efficientnetv2_rempahindo.keras")  # Gunakan forward slash untuk path
     return model
 
-# Memuat model dari Google Drive
+# Memuat model
 model = load_model()
-st.success("Model berhasil dimuat dari Google Drive!")
+st.success("Model berhasil dimuat!")
 
 # Daftar nama kelas sesuai dataset Anda
 class_names = [
