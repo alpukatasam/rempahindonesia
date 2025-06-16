@@ -1,0 +1,9 @@
+# Hindari file besar & temporary
+*.h5
+*.pb
+*.zip
+__pycache__/
+*.pyc
+.DS_Store
+.env
+model/

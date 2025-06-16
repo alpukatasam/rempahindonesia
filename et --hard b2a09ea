@@ -1,0 +1,18 @@
+[33m80cd312[m[33m ([m[1;36mHEAD[m[33m)[m HEAD@{0}: checkout: moving from cddd61ce5ff73cafb8a0807e8e9540e5e427c888 to 80cd312
+[33mcddd61c[m HEAD@{1}: commit: Menyimpan perubahan sebelum rebase
+[33md63a291[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{2}: pull --rebase origin main (start): checkout d63a29139eeafb37769ecd6dc155c724aff7da04
+[33m0d139a2[m[33m ([m[1;32mmain[m[33m)[m HEAD@{3}: rebase (abort): returning to refs/heads/main
+[33m0d139a2[m[33m ([m[1;32mmain[m[33m)[m HEAD@{4}: rebase (abort): returning to refs/heads/main
+[33m49b5c4d[m HEAD@{5}: commit: Menyimpan perubahan sebelum melanjutkan rebase
+[33mc0b8283[m HEAD@{6}: rebase (pick): Menambahkan file besar dengan Git LFS
+[33m463ba59[m HEAD@{7}: rebase (pick): Menyimpan perubahan sebelum rebase
+[33mb2a09ea[m HEAD@{8}: rebase (pick): Menambahkan file model dengan Git LFS
+[33md241ba6[m HEAD@{9}: commit: Menyimpan perubahan sebelum rebase
+[33m0d139a2[m[33m ([m[1;32mmain[m[33m)[m HEAD@{10}: commit: Menyimpan perubahan sebelum rebase
+[33m9cbd953[m HEAD@{11}: commit: Menambahkan file besar dengan Git LFS
+[33m0c62411[m HEAD@{12}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m0c62411[m HEAD@{13}: pull --rebase origin main (pick): Menyimpan perubahan sebelum rebase
+[33m1590d53[m HEAD@{14}: pull --rebase origin main (pick): Menambahkan file model dengan Git LFS
+[33m1ccf60e[m HEAD@{15}: pull --rebase origin main (start): checkout 1ccf60e9c4b4f2ebb35598f98bcb7dd61cceca92
+[33mab251e0[m HEAD@{16}: commit: Menyimpan perubahan sebelum rebase
+[33mca1c5c4[m HEAD@{17}: commit (initial): Menambahkan file model dengan Git LFS
