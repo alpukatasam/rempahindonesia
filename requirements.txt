@@ -1,7 +1,5 @@
-streamlit
-tensorflow
+streamlit==1.34.0
+tensorflow==2.12.0
 numpy
 pillow
-opencv-python
-matplotlib
 requests
