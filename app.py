@@ -1,89 +1,64 @@
+import os
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 from PIL import Image
-import os
-from utils import download_model_from_gdrive
+import tensorflow as tf
+from tensorflow.keras.applications.efficientnet_v2 import preprocess_input
 
-# --- Konfigurasi Model ---
-model_path = 'efficientnetv2_rempahindo.keras'
-file_id = '16mspKSZnXI3x2ENrW_FmOmei5Y_u0Z_8'
-
-# --- Load model dengan cache + error handler ---
+# 1. Load model (cache agar hanya sekali saja)
 @st.cache_resource
-def load_model_from_drive(file_id, model_path):
-    if not os.path.exists(model_path):
-        st.write("📥 Mengunduh model dari Google Drive...")
-        download_model_from_gdrive(file_id, output_path=model_path)
-        st.write(f"✅ Model berhasil diunduh: {model_path}")
-    try:
-        return tf.keras.models.load_model(model_path)
-    except Exception as e:
-        st.error(f"❌ Gagal memuat model: {e}")
-        st.stop()
+def load_model():
+    model_path = os.path.join(os.path.dirname(__file__), "models", "best_model.h5")
+    return tf.keras.models.load_model(model_path)
 
-model = load_model_from_drive(file_id, model_path)
+model = load_model()
 
-# --- Daftar kelas ---
-class_names = [
-    "adas", "andaliman", "asam jawa", "bawang bombai", "bawang merah", "bawang putih", 
-    "biji ketumbar", "bukan rempah", "bunga lawang", "cengkeh", "daun jeruk", "daun kemangi", 
-    "daun ketumbar", "daun salam", "jahe", "jinten", "kapulaga", "kayu manis", "kayu secang", 
-    "kemiri", "kemukus", "kencur", "kluwek", "kunyit", "lada", "lengkuas", "pala", 
-    "saffron", "serai", "vanili", "wijen"
-]
+# 2. Muat daftar kelas dari folder data_split/train
+@st.cache_data
+def load_class_names():
+    split_train = os.path.join(os.path.dirname(__file__), "data_split", "train")
+    classes = sorted([
+        d for d in os.listdir(split_train)
+        if os.path.isdir(os.path.join(split_train, d))
+    ])
+    return classes
 
-# --- UI Aplikasi ---
-st.title("🌿 Aplikasi Prediksi Rempah Indonesia")
-st.write("Pilih metode input gambar:")
+class_names = load_class_names()
 
-input_method = st.radio("Metode input:", ["Gunakan Kamera", "Unggah Gambar"], index=1)
+# 3. Fungsi preprocess & predict
+def predict_image(img: Image.Image):
+    img = img.convert("RGB").resize((224, 224))
+    x = np.array(img, dtype=np.float32)
+    x = preprocess_input(x)
+    x = np.expand_dims(x, axis=0)  # shape (1,224,224,3)
 
-image_source = None
-if input_method == "Gunakan Kamera":
-    image_source = st.camera_input("Ambil gambar:")
-elif input_method == "Unggah Gambar":
-    image_source = st.file_uploader("Unggah gambar:", type=["jpg", "jpeg", "png"])
+    preds = model.predict(x)[0]
+    top_idx = np.argmax(preds)
+    return class_names[top_idx], float(preds[top_idx])
 
-if image_source:
-    try:
-        image = Image.open(image_source)
-        st.image(image, caption="🖼️ Gambar yang digunakan", use_column_width=True)
-    except Exception:
-        st.error("⚠️ Gagal membuka gambar. Pastikan formatnya benar.")
-    else:
-        # --- Preprocessing gambar ---
-        image_resized = image.resize((224, 224))
-        img_array = np.array(image_resized)
+# 4. UI
+st.set_page_config(page_title="Klasifikasi Rempah", layout="centered")
 
-        if img_array.ndim == 2:
-            img_array = np.stack((img_array,) * 3, axis=-1)
-        elif img_array.shape[-1] == 4:
-            img_array = img_array[..., :3]
+st.title("🔍 Klasifikasi Rempah Indonesia")
+st.write("Upload gambar rempah atau ambil dengan kamera, lalu aplikasi akan memprediksi jenis rempah.")
 
-        img_array = tf.keras.applications.efficientnet_v2.preprocess_input(img_array)
-        img_array = np.expand_dims(img_array, axis=0)
+# Pilih metode input
+method = st.radio("Pilih metode input:", ["Upload Gambar", "Kamera"])
 
-        # --- Prediksi ---
-        preds = model.predict(img_array)
-        top_pred_index = np.argmax(preds[0])
-        top_pred_score = float(preds[0][top_pred_index])
-        top_pred_class = class_names[top_pred_index]
+img = None
+if method == "Upload Gambar":
+    file = st.file_uploader("Pilih file gambar", type=["jpg","jpeg","png"])
+    if file:
+        img = Image.open(file)
 
-        sorted_indices = np.argsort(preds[0])[::-1][:3]
-        top_classes = [class_names[i] for i in sorted_indices]
-        top_scores = [preds[0][i] for i in sorted_indices]
+else:  # Kamera
+    cam = st.camera_input("Ambil foto rempah")
+    if cam:
+        img = Image.open(cam)
 
-        # --- Output Prediksi ---
-        st.markdown("### 🧪 Hasil Prediksi (Top-1):")
-        st.success(f"**{top_pred_class}** dengan confidence: **{top_pred_score:.2f}**")
-
-        st.markdown("### 🔍 Top-3 Prediksi:")
-        for i in range(3):
-            st.write(f"{i+1}. {top_classes[i]}: {top_scores[i]:.2f}")
-
-        # --- Koreksi dari user ---
-        st.markdown("### ✏️ Koreksi (Feedback)")
-        feedback = st.selectbox("Jika prediksi salah, pilih label yang benar:", class_names)
-        if st.button("Kirim Feedback"):
-            st.info(f"Feedback dikirim! Label seharusnya: **{feedback}**. Terima kasih.")
+# Tampilkan dan prediksi
+if img:
+    st.image(img, caption="Gambar input", use_container_width=True)
+    st.write("⏳ Memproses...")
+    label, score = predict_image(img)
+    st.success(f"**Prediksi:** {label}  \n**Confidence:** {score:.2%}")
