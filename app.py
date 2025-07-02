@@ -13,50 +13,42 @@ def load_model():
 
 model = load_model()
 
-# 2. Muat daftar kelas dari folder data_split/train
-@st.cache_data
-def load_class_names():
-    split_train = os.path.join(os.path.dirname(__file__), "data_split", "train")
-    classes = sorted([
-        d for d in os.listdir(split_train)
-        if os.path.isdir(os.path.join(split_train, d))
-    ])
-    return classes
+# 2. Hard-code class names
+CLASS_NAMES = [
+    "adas", "andaliman", "asam jawa", "bawang bombai", "bawang merah", "bawang putih",
+    "biji ketumbar", "bukan rempah", "bunga lawang", "cengkeh", "daun jeruk", "daun kemangi",
+    "daun ketumbar", "daun salam", "jahe", "jinten", "kapulaga", "kayu manis", "kayu secang",
+    "kemiri", "kemukus", "kencur", "kluwek", "kunyit", "lada", "lengkuas", "pala",
+    "saffron", "serai", "vanili", "wijen"
+]
 
-class_names = load_class_names()
-
-# 3. Fungsi preprocess & predict
+# 3. Prediction function menggunakan CLASS_NAMES
 def predict_image(img: Image.Image):
     img = img.convert("RGB").resize((224, 224))
-    x = np.array(img, dtype=np.float32)
-    x = preprocess_input(x)
-    x = np.expand_dims(x, axis=0)  # shape (1,224,224,3)
-
+    x = preprocess_input(np.array(img, dtype=np.float32))
+    x = np.expand_dims(x, axis=0)
     preds = model.predict(x)[0]
-    top_idx = np.argmax(preds)
-    return class_names[top_idx], float(preds[top_idx])
+    idx = np.argmax(preds)
+    return CLASS_NAMES[idx], float(preds[idx])
 
-# 4. UI
+# 4. Streamlit UI
 st.set_page_config(page_title="Klasifikasi Rempah", layout="centered")
 
 st.title("🔍 Klasifikasi Rempah Indonesia")
-st.write("Upload gambar rempah atau ambil dengan kamera, lalu aplikasi akan memprediksi jenis rempah.")
+st.write("Gunakan upload gambar atau kamera untuk memprediksi jenis rempah.")
 
-# Pilih metode input
 method = st.radio("Pilih metode input:", ["Upload Gambar", "Kamera"])
 
 img = None
 if method == "Upload Gambar":
-    file = st.file_uploader("Pilih file gambar", type=["jpg","jpeg","png"])
+    file = st.file_uploader("Pilih file gambar", type=["jpg", "jpeg", "png"])
     if file:
         img = Image.open(file)
+else:
+    img_data = st.camera_input("Ambil foto rempah")
+    if img_data:
+        img = Image.open(img_data)
 
-else:  # Kamera
-    cam = st.camera_input("Ambil foto rempah")
-    if cam:
-        img = Image.open(cam)
-
-# Tampilkan dan prediksi
 if img:
     st.image(img, caption="Gambar input", use_container_width=True)
     st.write("⏳ Memproses...")
