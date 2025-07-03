@@ -1,19 +1,30 @@
 import os
+import time
 import streamlit as st
 import numpy as np
 from PIL import Image
 import tensorflow as tf
-from tensorflow.keras.applications.efficientnet_v2 import preprocess_input
 
-# 1. Load model (cache agar hanya sekali saja)
+# Imports khusus EfficientNetV2-S
+from tensorflow.keras.applications.efficientnet_v2 import (
+    EfficientNetV2S,
+    preprocess_input
+)
+
+# 1. Load model dengan custom_objects dan compile=False
 @st.cache_resource
 def load_model():
     model_path = os.path.join(os.path.dirname(__file__), "models", "best_model.h5")
-    return tf.keras.models.load_model(model_path)
+    return tf.keras.models.load_model(
+        model_path,
+        compile=False,
+        custom_objects={"EfficientNetV2S": EfficientNetV2S}
+    )
 
+# Panggil load_model() sekali
 model = load_model()
 
-# 2. Hard-code class names
+# 2. Daftar kelas
 CLASS_NAMES = [
     "adas", "andaliman", "asam jawa", "bawang bombai", "bawang merah", "bawang putih",
     "biji ketumbar", "bukan rempah", "bunga lawang", "cengkeh", "daun jeruk", "daun kemangi",
@@ -22,26 +33,18 @@ CLASS_NAMES = [
     "saffron", "serai", "vanili", "wijen"
 ]
 
-# 3. Prediction function menggunakan CLASS_NAMES
-def predict_image(img: Image.Image):
-    img = img.convert("RGB").resize((224, 224))
-    x = preprocess_input(np.array(img, dtype=np.float32))
-    x = np.expand_dims(x, axis=0)
-    preds = model.predict(x)[0]
-    idx = np.argmax(preds)
-    return CLASS_NAMES[idx], float(preds[idx])
-
-# 4. Streamlit UI
+# 3. Streamlit UI
 st.set_page_config(page_title="Klasifikasi Rempah", layout="centered")
-
 st.title("🔍 Klasifikasi Rempah Indonesia")
-st.write("Gunakan upload gambar atau kamera untuk memprediksi jenis rempah.")
+st.write("Upload gambar atau gunakan kamera untuk memprediksi jenis rempah.")
 
-method = st.radio("Pilih metode input:", ["Upload Gambar", "Kamera"])
+method    = st.radio("Metode input:", ["Upload Gambar", "Kamera"])
+show_top3 = st.checkbox("Tampilkan Top-3 Prediksi", value=False)
 
+# Ambil gambar dari file uploader atau kamera
 img = None
 if method == "Upload Gambar":
-    file = st.file_uploader("Pilih file gambar", type=["jpg", "jpeg", "png"])
+    file = st.file_uploader("Pilih file", type=["jpg","jpeg","png"])
     if file:
         img = Image.open(file)
 else:
@@ -49,8 +52,22 @@ else:
     if img_data:
         img = Image.open(img_data)
 
+# Prediksi dan tampilkan hasil
 if img:
-    st.image(img, caption="Gambar input", use_container_width=True)
-    st.write("⏳ Memproses...")
-    label, score = predict_image(img)
-    st.success(f"**Prediksi:** {label}  \n**Confidence:** {score:.2%}")
+    st.image(img, caption="Input", use_container_width=True)
+    with st.spinner("Memproses…"):
+        start     = time.time()
+        array_img = np.array(img.convert("RGB").resize((224,224)), dtype=np.float32)
+        x         = preprocess_input(array_img)
+        preds     = model.predict(np.expand_dims(x,0))[0]
+        elapsed_ms = (time.time() - start) * 1000
+
+    if not show_top3:
+        idx = np.argmax(preds)
+        st.success(f"**Prediksi:** {CLASS_NAMES[idx]}\n\n**Confidence:** {preds[idx]:.2%}")
+    else:
+        st.write("**Top-3 Prediksi:**")
+        for rank, j in enumerate(preds.argsort()[-3:][::-1], start=1):
+            st.write(f"{rank}. {CLASS_NAMES[j]} — {preds[j]:.2%}")
+
+    st.write(f"⏱️ Waktu inferensi: {elapsed_ms:.1f} ms")
