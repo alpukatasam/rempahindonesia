@@ -63,7 +63,6 @@ with st.container():
         st.image("img/spiceleft.png", width=100)  # Gambar di kiri diperkecil
     with col2:
         st.markdown("<h1 style='text-align: center;'>Aplikasi Prediksi Rempah Indonesia</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #444;'>Sistem deteksi dan pengenalan rempah berbasis deep learning</p>", unsafe_allow_html=True)
     with col3:
         st.image("img/spiceright.png", width=100)  # Gambar di kanan diperkecil
 
