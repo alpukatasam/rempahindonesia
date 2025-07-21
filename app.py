@@ -98,7 +98,7 @@ def process_image(source):
     except Exception:
         st.error("⚠️ Gagal membuka gambar. Pastikan format gambar benar.")
         st.stop()
-    st.image(image, caption="🖼️ Gambar yang Digunakan", use_column_width=True)
+    st.image(image, caption="🖼️ Gambar yang Digunakan", use_container_width=True)
     image_resized = image.resize((224, 224))
     img_array = np.array(image_resized)
     if img_array.ndim == 2:  # jika grayscale
@@ -144,7 +144,7 @@ if pilihan == "Halaman Utama":
     )
     
     st.image("https://assets.corteva.com/is/image/Corteva/ar2-17mar20?$image_desktop$",
-             caption="Berbagai Rempah Khas Indonesia", use_column_width=True)
+             caption="Berbagai Rempah Khas Indonesia", use_container_width=True)
 
 
 elif pilihan == "Upload Gambar":
