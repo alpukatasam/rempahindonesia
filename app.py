@@ -102,19 +102,18 @@ def predict_and_display(img_array):
     top3_idx = np.argsort(preds)[::-1][:3]
     df_top3 = pd.DataFrame({
         "Kelas": [class_names[i] for i in top3_idx],
-        "Confidence": preds[top3_idx]
+        "Confidence (%)": preds[top3_idx] * 100  # ubah ke persentase
     })
     # Tampilkan Prediksi Utama
     st.success(
         f"🔍 Prediksi Utama: **{df_top3.loc[0, 'Kelas']}** "
-        f"({df_top3.loc[0, 'Confidence']:.2f})"
+        f"({df_top3.loc[0, 'Confidence (%)']:.2f}%)"
     )
     # Tabel Top-3
     st.markdown("### 🔍 Tiga Prediksi Teratas")
-    st.table(df_top3.style.format({"Confidence": "{:.2f}"}))
+    st.table(df_top3.style.format({"Confidence (%)": "{:.2f}%"}))
     # Bar chart
     st.bar_chart(df_top3.set_index("Kelas"))
-
 # --- Konten Halaman Berdasarkan Pilihan ---
 if pilihan == "Halaman Utama":
     st.markdown("<h1 style='text-align: center;'>Selamat Datang</h1>", unsafe_allow_html=True)
@@ -146,3 +145,4 @@ elif pilihan == "Tangkap Gambar":
     if camera_img:
         img_arr = process_image(camera_img)
         predict_and_display(img_arr)
+
